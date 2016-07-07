@@ -520,15 +520,34 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
         }
         
         if let textFieldRetain = _textFieldView {
-            //Resign textFieldView.
-            let isResignedFirstResponder = resignFirstResponder()
-            
-            if isResignedFirstResponder &&
-                textFieldRetain.doneInvocation.target != nil &&
-                textFieldRetain.doneInvocation.action != nil{
-                
-                UIApplication.sharedApplication().sendAction(textFieldRetain.doneInvocation.action!, to: textFieldRetain.doneInvocation.target, from: textFieldRetain, forEvent: UIEvent())
+
+            var shouldResign: Bool? = nil
+            if let textField = textFieldRetain as? UITextField,
+            let textFieldShouldReturn = textField.delegate?.textFieldShouldReturn?(textField) {
+                // Ying: if textField implements this delegate callback, we don't invoke the
+                // resign block below.
+                shouldResign = !textFieldShouldReturn
             }
+
+            if shouldResign ?? true {
+                //Resign textFieldView.
+                let isResignedFirstResponder = resignFirstResponder()
+
+                if isResignedFirstResponder &&
+                    textFieldRetain.doneInvocation.target != nil &&
+                    textFieldRetain.doneInvocation.action != nil{
+
+                    UIApplication.sharedApplication().sendAction(textFieldRetain.doneInvocation.action!, to: textFieldRetain.doneInvocation.target, from: textFieldRetain, forEvent: UIEvent())
+                }
+            } else {
+                // Ying: Warn the user that we have not properly handled calling doneInvocation
+                if textFieldRetain.doneInvocation.target != nil &&
+                    textFieldRetain.doneInvocation.action != nil {
+                    print("Warning: doneInvocation will not be invoked.")
+                }
+
+            }
+
         }
     }
     
