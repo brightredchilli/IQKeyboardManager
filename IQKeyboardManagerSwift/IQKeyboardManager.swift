@@ -853,8 +853,10 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
                     unwrappedController.view.layoutIfNeeded()
                 }
  
-                
                 }) { (animated:Bool) -> Void in}
+            
+            let notification = frame.origin.y == 0 ? IQKeyboardManagerWillReturnRootFrameToOriginNotification : IQKeyboardManagerWillMoveRootFrameFromOriginNotification
+            NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: notification, object: nil))
         } else {  //  If can't get rootViewController then printing warning to user.
             showLog("You must set UIWindow.rootViewController in your AppDelegate to work with IQKeyboardManager")
         }
@@ -1491,7 +1493,7 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
                     
                     superScrollView = scrollView.superviewOfClassType(UIScrollView) as? UIScrollView
                 }
-                }) { (finished) -> Void in }
+            }) { (finished) -> Void in }
         }
         
         //  Setting rootViewController frame to it's original position. //  (Bug ID: #18)
@@ -1546,8 +1548,9 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
                             rootViewController.view.layoutIfNeeded()
                         }
                     }
-                    }) { (finished) -> Void in }
-                
+                }) { (finished) -> Void in }
+                NSNotificationCenter.defaultCenter().postNotificationName(IQKeyboardManagerWillReturnRootFrameToOriginNotification, object: nil)
+
                 _rootViewController = nil
             }
         }
