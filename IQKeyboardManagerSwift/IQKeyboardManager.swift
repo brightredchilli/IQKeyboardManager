@@ -842,6 +842,9 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
             //Used UIViewAnimationOptionBeginFromCurrentState to minimize strange animations.
             UIView.animateWithDuration(_animationDuration, delay: 0, options: UIViewAnimationOptions.BeginFromCurrentState.union(_animationCurve), animations: { () -> Void in
                 
+                let notification = frame.origin.y == 0 ? IQKeyboardManagerWillReturnRootFrameToOriginNotification : IQKeyboardManagerWillMoveRootFrameFromOriginNotification
+                NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: notification, object: nil))
+                
                 //  Setting it's new frame
                 unwrappedController.view.frame = newFrame
                 self.showLog("Set \(controller?._IQDescription()) frame to : \(newFrame)")
@@ -852,11 +855,7 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
                     unwrappedController.view.setNeedsLayout()
                     unwrappedController.view.layoutIfNeeded()
                 }
- 
-                }) { (animated:Bool) -> Void in}
-            
-            let notification = frame.origin.y == 0 ? IQKeyboardManagerWillReturnRootFrameToOriginNotification : IQKeyboardManagerWillMoveRootFrameFromOriginNotification
-            NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: notification, object: nil))
+            }) { (animated:Bool) -> Void in}
         } else {  //  If can't get rootViewController then printing warning to user.
             showLog("You must set UIWindow.rootViewController in your AppDelegate to work with IQKeyboardManager")
         }
@@ -1539,17 +1538,9 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
                         self.showLog("Restoring \(rootViewController._IQDescription()) frame to : \(self._topViewBeginRect)")
                         
                         //  Setting it's new frame
-                        rootViewController.view.frame = self._topViewBeginRect
-                        
-                        //Animating content if needed (Bug ID: #204)
-                        if self.layoutIfNeededOnUpdate == true {
-                            //Animating content (Bug ID: #160)
-                            rootViewController.view.setNeedsLayout()
-                            rootViewController.view.layoutIfNeeded()
-                        }
+                        self.setRootViewFrame(self._topViewBeginRect)
                     }
                 }) { (finished) -> Void in }
-                NSNotificationCenter.defaultCenter().postNotificationName(IQKeyboardManagerWillReturnRootFrameToOriginNotification, object: nil)
 
                 _rootViewController = nil
             }
