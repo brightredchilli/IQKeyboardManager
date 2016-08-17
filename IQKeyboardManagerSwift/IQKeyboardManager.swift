@@ -842,9 +842,6 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
             //Used UIViewAnimationOptionBeginFromCurrentState to minimize strange animations.
             UIView.animateWithDuration(_animationDuration, delay: 0, options: UIViewAnimationOptions.BeginFromCurrentState.union(_animationCurve), animations: { () -> Void in
                 
-                let notification = frame.origin.y == 0 ? IQKeyboardManagerWillReturnRootFrameToOriginNotification : IQKeyboardManagerWillMoveRootFrameFromOriginNotification
-                NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: notification, object: nil))
-                
                 //  Setting it's new frame
                 unwrappedController.view.frame = newFrame
                 self.showLog("Set \(controller?._IQDescription()) frame to : \(newFrame)")
@@ -859,6 +856,13 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
         } else {  //  If can't get rootViewController then printing warning to user.
             showLog("You must set UIWindow.rootViewController in your AppDelegate to work with IQKeyboardManager")
         }
+        
+        // This notification must be sent after the the animation block, or strange animation side-effects can occur.
+        // In particular, we have used this notification to show and hide the application's status bar.
+        // If this notification is sent before or during the animation block, the status bar will show and hide.
+        // However, the navigation bar will not animate correctly.
+        let notification = frame.origin.y == 0 ? IQKeyboardManagerWillReturnRootFrameToOriginNotification : IQKeyboardManagerWillMoveRootFrameFromOriginNotification
+        NSNotificationCenter.defaultCenter().postNotification(NSNotification(name: notification, object: nil))
     }
 
     /* Adjusting RootViewController's frame according to interface orientation. */
