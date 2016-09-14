@@ -1763,6 +1763,11 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
 
             if let unwrappedRootController = _rootViewController {
                 _topViewBeginRect = unwrappedRootController.view.frame
+                // If the _rootViewController's frame's origin has a y offset before the rotation,
+                // this offset is being arbitrarily passed along after the rotation via _topViewBeginRect.
+                // Therefore, we will force the origin of _topViewBeginRect to 0 and let the IQKeyboardManager
+                // recalculate the actual offset.
+                _topViewBeginRect.origin = CGPoint.zero
                 
                 if shouldFixInteractivePopGestureRecognizer == true &&
                     unwrappedRootController is UINavigationController {
