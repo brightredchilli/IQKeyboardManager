@@ -1324,17 +1324,7 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
             
             if let unwrappedRootController = _rootViewController {
                 _topViewBeginRect = unwrappedRootController.view.frame
-                
-                if shouldFixInteractivePopGestureRecognizer == true &&
-                    unwrappedRootController is UINavigationController {
-                    
-                    if let window = keyWindow() {
-                        _topViewBeginRect.origin = CGPointMake(0,window.frame.size.height-unwrappedRootController.view.frame.size.height)
-                    } else {
-                        _topViewBeginRect.origin = CGPointZero
-                    }
-                }
-
+                adjustTopViewBeginRectForViewController(unwrappedRootController)
                 showLog("Saving \(unwrappedRootController._IQDescription()) beginning Frame: \(_topViewBeginRect)")
             } else {
                 _topViewBeginRect = CGRectZero
@@ -1647,18 +1637,8 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
             }
 
             if let rootViewController = _rootViewController {
-                
                 _topViewBeginRect = rootViewController.view.frame
-                
-                if shouldFixInteractivePopGestureRecognizer == true &&
-                    rootViewController is UINavigationController {
-                    if let window = keyWindow() {
-                        _topViewBeginRect.origin = CGPointMake(0,window.frame.size.height-rootViewController.view.frame.size.height)
-                    } else {
-                        _topViewBeginRect.origin = CGPointZero
-                    }
-                }
-
+                adjustTopViewBeginRectForViewController(rootViewController)
                 showLog("Saving \(rootViewController._IQDescription()) beginning frame : \(_topViewBeginRect)")
             }
         }
@@ -1675,7 +1655,7 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
 
         showLog("****** \(#function) ended ******")
     }
-    
+
     /**  UITextFieldTextDidEndEditingNotification, UITextViewTextDidEndEditingNotification. Removing fetched object. */
     internal func textFieldViewDidEndEditing(notification:NSNotification) {
         
@@ -1768,17 +1748,7 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
                 // Therefore, we will force the origin of _topViewBeginRect to 0 and let the IQKeyboardManager
                 // recalculate the actual offset.
                 _topViewBeginRect.origin = CGPoint.zero
-                
-                if shouldFixInteractivePopGestureRecognizer == true &&
-                    unwrappedRootController is UINavigationController {
-                    
-                    if let window = keyWindow() {
-                        _topViewBeginRect.origin = CGPointMake(0,window.frame.size.height-unwrappedRootController.view.frame.size.height)
-                    } else {
-                        _topViewBeginRect.origin = CGPointZero
-                    }
-                }
-                
+                adjustTopViewBeginRectForViewController(unwrappedRootController)
                 showLog("Saving \(unwrappedRootController._IQDescription()) beginning Frame: \(_topViewBeginRect)")
             } else {
                 _topViewBeginRect = CGRectZero
@@ -2232,5 +2202,24 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
             print("IQKeyboardManager: " + logString)
         }
     }
-}
 
+    // MARK: - Helpers
+
+    internal func adjustTopViewBeginRectForViewController(viewController: UIViewController) {
+        let modalPresentationStyleIsPageSheet = viewController.modalPresentationStyle == .PageSheet
+        let viewControllerIsNavigationController = viewController is UINavigationController
+        if shouldFixInteractivePopGestureRecognizer && viewControllerIsNavigationController {
+            // Instead of always adjusting _topViewBeginRect for the above conditions, we introduce a new condition: 
+            // the UINavigationController cannot have the PageSheet modalPresentationStyle. Strange things happen 
+            // If you adjust the frame of a UINavigationController's view while it is presented as a PageSheet. 
+            // This solution is not perfect because if the UINavigationController has this modalPresentationStyle, 
+            // but is not presented modally, it will miss out on its frame being adjusted. This case is edgy enough 
+            // that we will not consider it here.
+            if let window = keyWindow() where !modalPresentationStyleIsPageSheet {
+                _topViewBeginRect.origin = CGPointMake(0,window.frame.size.height-viewController.view.frame.size.height)
+            } else {
+                _topViewBeginRect.origin = CGPointZero
+            }
+        }
+    }
+}
