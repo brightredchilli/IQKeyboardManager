@@ -1092,16 +1092,18 @@ public class IQKeyboardManager: NSObject, UIGestureRecognizerDelegate {
                         }
                         
                         //Getting problem while using `setContentOffset:animated:`, So I used animation API.
-                        UIView.animateWithDuration(_animationDuration, delay: 0, options: UIViewAnimationOptions.BeginFromCurrentState.union(_animationCurve), animations: { () -> Void in
-                        
-                            self.showLog("Adjusting \(scrollView.contentOffset.y-shouldOffsetY) to \(scrollView._IQDescription()) ContentOffset")
-                            
-                            self.showLog("Remaining Move: \(move)")
-                            
-                            scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, shouldOffsetY)
+                        if !scrollView.isKindOfClass(UICollectionView) {
+                            UIView.animateWithDuration(_animationDuration, delay: 0, options: UIViewAnimationOptions.BeginFromCurrentState.union(_animationCurve), animations: { () -> Void in
+
+                                self.showLog("Adjusting \(scrollView.contentOffset.y-shouldOffsetY) to \(scrollView._IQDescription()) ContentOffset")
+
+                                self.showLog("Remaining Move: \(move)")
+
+                                scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, shouldOffsetY)
                             }) { (animated:Bool) -> Void in }
+                        }
                     }
-                    
+
                     //  Getting next lastView & superScrollView.
                     lastView = scrollView
                     superScrollView = lastView.superviewOfClassType(UIScrollView) as? UIScrollView
